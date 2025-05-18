@@ -8,6 +8,7 @@ st.title('Dados Instalação AC :male-mechanic:')
 
 # Nome do cliente
 cliente = st.text_input('Cliente')
+endereco = st.text_input('Endereço')
 
 # Quantidade de aparelhos
 qtd_aparelhos = st.selectbox('Quantidade de aparelhos', list(range(1, 11)))
@@ -23,19 +24,12 @@ for i in range(qtd_aparelhos):
     ambiente = st.text_input("Ambiente de instalação", key=f"ambiente_{i}")
     dist_chao_evap = st.number_input("Distância do chão (m)", key=f"dist_chao_evap_{i}", min_value=0.0, step=0.01)
     dist_teto_evap = st.number_input("Distância do teto (m)", key=f"dist_teto_evap_{i}", min_value=0.0, step=0.01)
-    dist_paredes_laterais = st.number_input('Distância paredes laterais (m)', key=f'dist_paredes_laterais_{i}', min_value=0.0, step=0.01)
-    tipo_parede_evap = st.selectbox(
-        "Tipo de parede (Evaporadora)",
-        ["Concreto", "Alvenaria", "Drywall", "Madeira"],
-        key=f"tipo_parede_evap_{i}"
-    )
+    dist_paredes_lateral_direita = st.number_input('Distância paredes lateral direita (cm)', key=f'dist_paredes_lateral_direita_{i}', min_value=0.0, step=0.01)
+    dist_paredes_lateral_esquerda = st.number_input('Distância paredes lateral esquerda (cm)', key=f'dist_paredes_lateral_esquerda_{i}', min_value=0.0, step=0.01)
+    tipo_parede_evap = st.selectbox("Tipo de parede (Evaporadora)", ["Concreto", "Alvenaria", "Drywall", "Madeira"], key=f"tipo_parede_evap_{i}")
 
     st.subheader("CONDENSADORA")
-    local_condensadora = st.selectbox(
-        "Local da instalação",
-        ["Parede", "Área Técnica", "Chão", "Telhado"],
-        key=f"local_condensadora_{i}"
-    )
+    local_condensadora = st.selectbox("Local da instalação", ["Parede", "Área Técnica", "Chão", "Telhado"], key=f"local_condensadora_{i}")
     tipo_telhado = ''
     tipo_parede_cond = ''
     area_tecnica = 0
@@ -53,48 +47,25 @@ for i in range(qtd_aparelhos):
     st.subheader("DIVERSOS")
     metros_tubulacao = st.number_input("Metros de tubulação", key=f"metros_tubulacao_{i}", min_value=0.0, step=0.01)
 
-    uso_guindaste = st.selectbox(
-        f"Usou guindaste no Aparelho {i+1}?",
-        options=["Não", "Sim"],
-        key=f"uso_guindaste_{i}"
-    )
-    ponto_dreno = st.selectbox(
-        f"Ponto de dreno disponível no Aparelho {i+1}?",
-        options=["Não", "Sim"],
-        key=f"ponto_dreno_{i}"
-    )
-    ponto_220v = st.selectbox(
-        f"Ponto 220v disponível no Aparelho {i+1}?",
-        options=["Não", "Sim"],
-        key=f"ponto_220v_{i}"
-    )
-    disjuntor_sep = st.selectbox(
-        f"Disjuntor separado no Aparelho {i+1}?",
-        options=["Não", "Sim"],
-        key=f"disjuntor_sep_{i}"
-    )
-    if disjuntor_sep == "Sim":
-        capacidade_disjuntor = st.text_input(
-            f"Capacidade do disjuntor do Aparelho {i+1}",
-            key=f"capacidade_disjuntor_{i}"
-        )
-    else:
-        capacidade_disjuntor = ""
+    uso_guindaste = st.selectbox(f"Usou guindaste no Aparelho {i+1}?", options=["Não", "Sim"], key=f"uso_guindaste_{i}")
+    ponto_dreno = st.selectbox(f"Ponto de dreno disponível no Aparelho {i+1}?", options=["Não", "Sim"], key=f"ponto_dreno_{i}")
+    ponto_220v = st.selectbox(f"Ponto 220v disponível no Aparelho {i+1}?", options=["Não", "Sim"], key=f"ponto_220v_{i}")
+    disjuntor_sep = st.selectbox(f"Disjuntor separado no Aparelho {i+1}?", options=["Não", "Sim"], key=f"disjuntor_sep_{i}")
+    capacidade_disjuntor = st.text_input(f"Capacidade do disjuntor do Aparelho {i+1}", key=f"capacidade_disjuntor_{i}") if disjuntor_sep == "Sim" else ""
 
-    observacoes = st.text_area(
-        f"Observações do Aparelho {i+1}",
-        key=f"observacoes_{i}"
-    )
+    observacoes = st.text_area(f"Observações do Aparelho {i+1}", key=f"observacoes_{i}")
 
     aparelhos.append({
         "cliente": cliente,
+        "endereço": endereco,
         "aparelho": i + 1,
         "marca_modelo": marca_modelo,
         "capacidade_aparelho": capacidade_aparelho,
         "ambiente": ambiente,
         "dist_chao_evap": dist_chao_evap,
         "dist_teto_evap": dist_teto_evap,
-        "dist_paredes_laterais": dist_paredes_laterais,
+        "dist_paredes_lateral_direita": dist_paredes_lateral_direita,
+        "dist_paredes_lateral_esquerda": dist_paredes_lateral_esquerda,
         "tipo_parede_evap": tipo_parede_evap,
         "local_condensadora": local_condensadora,
         "dist_chao_cond": dist_chao_cond,
@@ -110,32 +81,51 @@ for i in range(qtd_aparelhos):
         "observacoes": observacoes
     })
 
-
-def gerar_pdf(cliente, aparelhos):
+def gerar_pdf(cliente, endereco, aparelhos):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 10, f"Instalação Ar-condicionado - Cliente: {cliente}", ln=True, align='C')
+    pdf.cell(0, 10, "Instalação de Ar-condicionado", ln=True, align='C')
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"Cliente: {cliente}", ln=True)
+    pdf.cell(0, 10, f"Endereço: {endereco}", ln=True)
     pdf.ln(5)
 
-    pdf.set_font("Arial", size=12)
     for a in aparelhos:
-        pdf.cell(0, 10, f"Aparelho {a['aparelho']}: {a['marca_modelo']}", ln=True)
-        pdf.multi_cell(0, 8, f"""
-Ambiente: {a.get('ambiente', '')} | Dist chão: {a.get('dist_chao_evap', 0)} m | Teto: {a.get('dist_teto_evap', 0)} m | Paredes laterais: {a.get('dist_paredes_laterais', 0)} m
-Condensadora: {a.get('local_condensadora', '')}
-  Tipo parede: {a.get('tipo_parede_cond', '')} | Tipo telhado: {a.get('tipo_telhado', '')} | Área técnica: {a.get('area_tecnica', 0)} m²
-Tubulação: {a.get('metros_tubulacao', 0)} m
-Uso guindaste: {"Sim" if a.get('uso_guindaste', 0) else "Não"} | Ponto dreno: {"Sim" if a.get('ponto_dreno', 0) else "Não"} | Ponto 220V: {"Sim" if a.get('ponto_220v', 0) else "Não"}
-Disjuntor separado: {"Sim" if a.get('disjuntor_sep', 0) else "Não"} | Capacidade disjuntor: {a.get('capacidade_disjuntor', '')}
-Observações: {a.get('observacoes', '')}
-""")
-        pdf.cell(0, 10, "-----------------------------", ln=True)
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(0, 8, f"Aparelho {a['aparelho']}: {a['marca_modelo']} ({a['capacidade_aparelho']} BTU/h)", ln=True)
+        pdf.set_font("Arial", "", 11)
+
+        info_text = [
+            f"Ambiente: {a['ambiente']}",
+            f"Evaporadora: Chão: {a['dist_chao_evap']} m | Teto: {a['dist_teto_evap']} m | Lateral Dir: {a['dist_paredes_lateral_direita']} cm | Lateral Esq: {a['dist_paredes_lateral_esquerda']} cm",
+            f"Tipo de parede (Evaporadora): {a['tipo_parede_evap']}",
+        ]
+
+        if a['local_condensadora'] == 'Parede':
+            info_text.append(f"Condensadora: Local: {a['local_condensadora']} | Tipo parede: {a['tipo_parede_cond']} | Dist chão: {a['dist_chao_cond']} m")
+        elif a['local_condensadora'] == 'Telhado':
+            info_text.append(f"Condensadora: Local: {a['local_condensadora']} | Tipo telhado: {a['tipo_telhado']} | Dist chão: {a['dist_chao_cond']} m")
+        elif a['local_condensadora'] == 'Área Técnica':
+            info_text.append(f"Condensadora: Local: {a['local_condensadora']} | Área técnica: {a['area_tecnica']} m²")
+        else:
+            info_text.append(f"Condensadora: Local: {a['local_condensadora']}")
+
+        info_text.extend([
+            f"Tubulação: {a['metros_tubulacao']} m",
+            f"Guindaste: {'Sim' if a['uso_guindaste'] else 'Não'} | Dreno: {'Sim' if a['ponto_dreno'] else 'Não'} | 220v: {'Sim' if a['ponto_220v'] else 'Não'} | Disjuntor: {'Sim' if a['disjuntor_sep'] else 'Não'}",
+            f"Capacidade Disjuntor: {a['capacidade_disjuntor']}",
+            f"Observações: {a['observacoes']}"
+        ])
+
+        pdf.multi_cell(0, 7, "\n".join(info_text))
+        pdf.ln(2)
+        pdf.cell(0, 5, "-"*100, ln=True)
+        pdf.ln(2)
 
     pdf_path = f"instalacao_{cliente.replace(' ', '_').lower()}.pdf"
     pdf.output(pdf_path)
     return pdf_path
-
 
 if st.button("Salvar e Exportar"):
 
@@ -149,7 +139,7 @@ if st.button("Salvar e Exportar"):
         df_aparelhos.to_excel(excel_file, index=False)
 
         # Salvar PDF
-        pdf_file = gerar_pdf(cliente, aparelhos)
+        pdf_file = gerar_pdf(cliente, endereco, aparelhos)
 
         # Salvar no banco SQLite
         engine = create_engine("sqlite:///instalacoes.db")
